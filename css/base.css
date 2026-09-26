@@ -1,0 +1,129 @@
+/* ====================================================================
+   MetaVr · base
+   --------------------------------------------------------------------
+   Solo lo que pertenece a la página, no a A-Frame. El canvas de la
+   escena se deja tal cual: cualquier regla de fondo o tamano sobre el
+   pelea con el tamano que impone el visor.
+
+   Variables en :root para que el HUD 2D y el 3D compartan paleta sin
+   tener que repetir los hex.
+   ==================================================================== */
+
+:root {
+  --void: #04060a;
+  --surface: #0b1118;
+  --line: #1b2733;
+  --cyan: #35f2e0;
+  --magenta: #ff4d9d;
+  --text: #e8f1f5;
+  --muted: #6b8391;
+
+  --font: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', sans-serif;
+  --mono: 'SF Mono', 'Roboto Mono', ui-monospace, monospace;
+
+  /* Padding de seguridad: en un Quest el HUD del sistema se come los
+     bordes de la pantalla. */
+  --pad: clamp(14px, 2.2vmin, 30px);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--void);
+  color: var(--text);
+  font-family: var(--font);
+  /* Sin seleccion de texto: en un visor arrastrar es girar la camara, y
+     en escritorio molesta igual. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+a-scene {
+  position: fixed;
+  inset: 0;
+}
+
+canvas {
+  display: block;
+  touch-action: none;   /* sin esto el dedo hace scroll en vez de orbitar */
+}
+
+/* Si el usuario pide menos movimiento, la pagina lo respeta. La escena 3D
+   sigue moviendose porque ahi el movimiento es el contenido, no adorno. */
+@media (prefers-reduced-motion: reduce) {
+  .mv-quip,
+  .mv-toast,
+  .mv-variant,
+  .mv-specs,
+  .mv-idle {
+    animation: none !important;
+  }
+}
+
+/* --------------------------------------------------------------------
+   Boton nativo de "Entrar en VR" de A-Frame
+   --------------------------------------------------------------------
+   A-Frame lo crea al montar la escena y le pone sus propias clases,
+   asi que el estilo va por clase y no por id. */
+.a-enter-vr-button {
+  font-family: var(--font) !important;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 12px !important;
+}
+
+/* El canvas es la superficie de orbitar, asi que cursor propio para que
+   el arrastre se entienda sin instrucciones. */
+.a-canvas { cursor: grab; }
+.a-canvas:active { cursor: grabbing; }
+
+/* --------------------------------------------------------------------
+   Aviso de fallo
+   -------------------------------------------------------------------- */
+.mv-fatal {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  padding: var(--pad);
+  background: var(--void);
+  text-align: center;
+}
+
+.mv-fatal h1 {
+  margin: 0;
+  font-size: clamp(18px, 3.4vmin, 28px);
+  font-weight: 600;
+  color: var(--magenta);
+}
+
+.mv-fatal p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.mv-fatal pre {
+  margin: 12px auto 0;
+  max-width: min(680px, 90vw);
+  max-height: 40vh;
+  padding: 12px 14px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 12px;
+  text-align: left;
+  white-space: pre-wrap;
+}

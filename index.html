@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>AURA-9 · visor de realidad virtual</title>
+  <meta name="description" content="AURA-9: visor de realidad virtual original. Gíralo, coge el filtro óptico, ponte las gafas y lanza bolas. Hecho con A-Frame y Three.js.">
+  <meta name="theme-color" content="#04060a">
+
+  <!-- Sin CDN: todo el código va vendorizado. Motivos que no son
+       capricho: GitHub Pages sirve por HTTPS pero el usuario puede abrir
+       la copia local sin red; y en un Quest la primera petición a un
+       tercero añade latencia suficiente para que la escena "entre" tarde
+       medio segundo de más. -->
+
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/hud.css">
+
+  <!--
+    A-Frame y el sistema de física van AQUÍ, en el <head> y sin defer. No es
+    una manía del orden: A-Frame registra sus componentes mientras se carga
+    el script, y si el documento ya se ha analizado, los atributos que
+    meeten en <a-scene> se descartan en silencio. Con el script al final del
+    <body> la escena arranca sin física, sin sombra y sin fog, y no hay
+    ningún error visible: solo una página que se ve mal.
+  -->
+  <script src="vendor/aframe-1.8.0.min.js"></script>
+  <script src="vendor/aframe-physics-system-4.2.4.min.js"></script>
+</head>
+<body>
+
+  <!--
+    La escena se construye casi entera desde js/main.js. Aquí solo va lo
+    imprescindible: los ajustes del renderer y del sistema de física.
+
+    `embedded` y `vr-mode-ui` se dejan por defecto a propósito: son los que
+    traen el botón de "Entrar en VR", que es la mitad del propósito de la
+    página.
+
+    OJO con los nombres de los atributos: A-Frame avisa por consola y los
+    descarta en silencio si no coinciden con el esquema. Los que hay aquí
+    están comprobados contra 1.8.0:
+      · fog usa near/far/color, no fogNear/fogFar/fogColor.
+      · renderer no admite powerPreference ni sortObjects (este último se
+        cambió a sortTransparentObjects).
+      · el sistema de luz se apaga con defaultLightsEnabled, porque las
+        luces de la escena las crea js/scene.js a mano.
+      · shadow solo acepta basic|pcf, y autoUpdate tiene que quedar a true:
+        con false las sombras se calculan una vez y se quedan congeladas
+        mientras las bolas vuelan.
+  -->
+  <a-scene
+    id="escena"
+    background="color: #04060a"
+    fog="near: 2.2; far: 14; color: #04060a"
+    shadow="type: pcf; autoUpdate: true"
+    loading-screen="dotsColor: #35f2e0; backgroundColor: #04060a"
+    xr-mode-ui="XRMode: xr"
+    physics="gravity: -9.8; friction: 0.4; restitution: 0.32; iterations: 12; debug: false"
+    renderer="antialias: true; colorManagement: true; sortTransparentObjects: true"
+    light="defaultLightsEnabled: false"
+    webxr="optionalFeatures: local-floor, bounded-floor, hand-tracking"
+  ></a-scene>
+
+  <!-- La página. El orden es de abajo arriba porque cada módulo usa el
+       anterior: config y util no usan nada; materials usa util; los
+       sistemas usan todo lo anterior. Con `defer` el orden de ejecución
+       es el del documento, pero la descarga es en paralelo. -->
+  <script defer src="js/config.js"></script>
+  <script defer src="js/util.js"></script>
+  <script defer src="js/quip.js"></script>
+  <script defer src="js/glasses/materials.js"></script>
+  <script defer src="js/glasses/frame.js"></script>
+  <script defer src="js/glasses/lens.js"></script>
+  <script defer src="js/glasses/temple.js"></script>
+  <script defer src="js/glasses/build.js"></script>
+  <script defer src="js/scene.js"></script>
+  <script defer src="js/orbit2d.js"></script>
+  <script defer src="js/physics.js"></script>
+  <script defer src="js/grab.js"></script>
+  <script defer src="js/optical.js"></script>
+  <script defer src="js/showroom.js"></script>
+  <script defer src="js/ui3d.js"></script>
+  <script defer src="js/minigame.js"></script>
+  <script defer src="js/easter.js"></script>
+  <script defer src="js/perf.js"></script>
+  <script defer src="js/hud.js"></script>
+  <script defer src="js/main.js"></script>
+
+  <!-- Sin esto no hay nada visible para un lector de pantalla, y la
+       página no sirve de nada si el 3D falla. Es también la red de
+       seguridad de showFatal(). -->
+  <noscript>
+    <div class="mv-fatal">
+      <h1>AURA-9 necesita JavaScript</h1>
+      <p>Es un visor de realidad virtual que se construye en el navegador.
+         Con JavaScript desactivado no hay nada que enseñarte.</p>
+    </div>
+  </noscript>
+
+</body>
+</html>

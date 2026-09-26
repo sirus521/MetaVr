@@ -1,0 +1,395 @@
+/* ====================================================================
+   MetaVr · HUD 2D
+   --------------------------------------------------------------------
+   La capa de DOM que sustituye al HUD 3D cuando no estamos en VR.
+
+   Tres reglas que se respetan en todo el archivo:
+     · nada de position fixed salvo la raiz, para que el overlay entero
+       se pueda ocultar con una clase;
+     · animaciones solo de entrada y de salida, nunca bucles infinitos;
+     · todo el texto del mundo real se reserva el escenario; el overlay
+       se mantiene en los bordes, porque el centro es el producto.
+   ==================================================================== */
+
+.mv-hud {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;      /* el canvas recibe el raton */
+  font-family: var(--font);
+  /* El overlay nunca debe capturar el gesto de orbitar. */
+  opacity: 1;
+  transition: opacity 260ms ease;
+}
+
+/* Dentro de la sesion de VR el overlay desaparece: manda el HUD 3D. */
+.mv-hud.is-vr { opacity: 0; pointer-events: none; }
+
+.mv-hud.is-hidden { display: none; }
+
+/* Todo lo interactivo vuelve a capturar el raton. */
+.mv-bar,
+.mv-specs { pointer-events: auto; }
+
+.is-hidden { display: none !important; }
+
+/* --------------------------------------------------------------------
+   Barra superior
+   -------------------------------------------------------------------- */
+
+.mv-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: var(--pad);
+  /* Degradado en vez de caja solida: el texto se lee sobre el 3D sin
+     partir la imagen en dos. */
+  background: linear-gradient(180deg, rgba(4, 6, 10, 0.82), rgba(4, 6, 10, 0));
+}
+
+.mv-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+}
+
+.mv-brand-name {
+  font-size: clamp(15px, 2.4vmin, 20px);
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.mv-brand-tag {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mv-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* --------------------------------------------------------------------
+   Botones
+   -------------------------------------------------------------------- */
+
+.mv-btn {
+  appearance: none;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(11, 17, 24, 0.72);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: border-color 140ms ease, background 140ms ease,
+              transform 90ms ease, color 140ms ease;
+}
+
+.mv-btn:hover,
+.mv-btn:focus-visible {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  outline: none;
+}
+
+.mv-btn.is-pressed { transform: scale(0.94); }
+
+.mv-btn-accent { border-color: rgba(53, 242, 224, 0.42); color: var(--cyan); }
+
+.mv-btn-play {
+  border-color: rgba(255, 77, 157, 0.45);
+  color: var(--magenta);
+}
+.mv-btn-play:hover,
+.mv-btn-play:focus-visible {
+  border-color: var(--magenta);
+  color: var(--magenta);
+}
+
+/* --------------------------------------------------------------------
+   Replica del visor
+   -------------------------------------------------------------------- */
+
+.mv-quip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--pad) + 34px);
+  transform: translateX(-50%);
+  max-width: min(680px, 88vw);
+  padding: 10px 18px;
+  border: 1px solid rgba(53, 242, 224, 0.22);
+  border-radius: 12px;
+  background: rgba(4, 6, 10, 0.78);
+  backdrop-filter: blur(8px);
+  color: var(--text);
+  font-size: clamp(13px, 1.9vmin, 16px);
+  line-height: 1.45;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.mv-quip.is-enter { animation: mv-rise 340ms cubic-bezier(0.16, 1, 0.3, 1); }
+
+@keyframes mv-rise {
+  from { opacity: 0; transform: translate(-50%, 12px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* --------------------------------------------------------------------
+   Marcador
+   -------------------------------------------------------------------- */
+
+.mv-score {
+  position: absolute;
+  top: calc(var(--pad) + 56px);
+  right: var(--pad);
+  padding: 10px 16px;
+  border: 1px solid rgba(53, 242, 224, 0.24);
+  border-radius: 10px;
+  background: rgba(4, 6, 10, 0.74);
+  backdrop-filter: blur(6px);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.6;
+  letter-spacing: 0.06em;
+  text-align: right;
+  white-space: pre-line;
+}
+
+/* --------------------------------------------------------------------
+   Variante activa
+   -------------------------------------------------------------------- */
+
+.mv-variant {
+  position: absolute;
+  top: calc(var(--pad) + 56px);
+  left: var(--pad);
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 77, 157, 0.28);
+  background: rgba(4, 6, 10, 0.7);
+  color: var(--magenta);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.mv-variant.is-enter { animation: mv-fade 420ms ease; }
+
+@keyframes mv-fade {
+  from { opacity: 0; transform: translateX(-10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* --------------------------------------------------------------------
+   Aviso corto
+   -------------------------------------------------------------------- */
+
+.mv-toast {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--pad) + 96px);
+  transform: translateX(-50%);
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(53, 242, 224, 0.12);
+  border: 1px solid rgba(53, 242, 224, 0.3);
+  color: var(--cyan);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.mv-toast.is-enter { animation: mv-pop 260ms cubic-bezier(0.16, 1, 0.3, 1); }
+
+@keyframes mv-pop {
+  from { opacity: 0; transform: translate(-50%, 8px) scale(0.96); }
+  to   { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+
+/* --------------------------------------------------------------------
+   Ficha tecnica
+   -------------------------------------------------------------------- */
+
+.mv-specs {
+  position: absolute;
+  top: 50%;
+  right: var(--pad);
+  transform: translateY(-50%);
+  width: min(300px, 78vw);
+  padding: 20px 22px;
+  border: 1px solid rgba(255, 77, 157, 0.24);
+  border-radius: 14px;
+  background: rgba(6, 9, 14, 0.92);
+  backdrop-filter: blur(10px);
+}
+
+.mv-specs.is-enter { animation: mv-slide 320ms cubic-bezier(0.16, 1, 0.3, 1); }
+
+@keyframes mv-slide {
+  from { opacity: 0; transform: translate(24px, -50%); }
+  to   { opacity: 1; transform: translate(0, -50%); }
+}
+
+.mv-specs-title {
+  margin: 0 0 14px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--magenta);
+}
+
+.mv-specs-body {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 16px;
+  margin: 0;
+  font-size: 13px;
+}
+
+.mv-specs-body dt { color: var(--muted); }
+.mv-specs-body dd { margin: 0; color: var(--text); text-align: right; }
+
+.mv-specs-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.mv-specs-close:hover { color: var(--magenta); }
+
+/* --------------------------------------------------------------------
+   Pista de controles
+   -------------------------------------------------------------------- */
+
+.mv-hint {
+  position: absolute;
+  left: 50%;
+  bottom: var(--pad);
+  transform: translateX(-50%);
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+
+.mv-hint b { color: var(--text); font-weight: 600; }
+
+/* --------------------------------------------------------------------
+   Aviso de inactividad
+   -------------------------------------------------------------------- */
+
+.mv-idle {
+  position: absolute;
+  left: var(--pad);
+  bottom: var(--pad);
+  max-width: 240px;
+  padding: 8px 14px;
+  border-left: 2px solid var(--cyan);
+  color: var(--muted);
+  font-size: 12px;
+  font-style: italic;
+}
+
+.mv-idle.is-enter { animation: mv-fade 500ms ease; }
+
+/* --------------------------------------------------------------------
+   Arranque
+   -------------------------------------------------------------------- */
+
+.mv-boot {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--void);
+  transition: opacity 600ms ease, visibility 600ms;
+}
+
+.mv-boot.is-gone {
+  opacity: 0;
+  visibility: hidden;
+  /* Se queda en el DOM: el nodo no se reutiliza y sacarlo en el primer
+     frame genera un relayout innecesario. */
+}
+
+.mv-boot-name {
+  font-size: clamp(22px, 5vmin, 40px);
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  color: var(--text);
+  animation: mv-pulse 1.6s ease-in-out infinite;
+}
+
+.mv-boot-tag {
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+@keyframes mv-pulse {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+
+/* --------------------------------------------------------------------
+   Pantallas estrechas
+   --------------------------------------------------------------------
+   En un movil en vertical la barra de arriba no cabe. Pasamos a dos
+   filas en vez de dejar que los botones se solapen con el titulo. */
+@media (max-width: 620px) {
+  .mv-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .mv-controls { justify-content: flex-start; }
+  .mv-hint { display: none; }
+  .mv-specs {
+    top: auto;
+    bottom: var(--pad);
+    right: var(--pad);
+    left: var(--pad);
+    width: auto;
+    transform: none;
+  }
+  .mv-specs.is-enter { animation: mv-rise-flat 320ms cubic-bezier(0.16, 1, 0.3, 1); }
+  @keyframes mv-rise-flat {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .mv-score { font-size: 11px; }
+}
